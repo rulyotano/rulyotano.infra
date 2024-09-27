@@ -1,0 +1,13 @@
+name: Deploy Rulyotano (infra)
+
+on: 
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    uses: ./.github/workflows/base.deploy.yml
+    secrets: inherit
+    with:
+      name: infra
+      fileAddress: https://raw.githubusercontent.com/rulyotano/rulyotano.infra/master/docker-compose.infra.yml
+    
