@@ -9,5 +9,5 @@ jobs:
     secrets: inherit
     with:
       name: infra
-      fileAddress: https://raw.githubusercontent.com/rulyotano/rulyotano.infra/master/docker-compose.infra.yml
+      fileAddress: https://raw.githubusercontent.com/rulyotano/rulyotano.infra/main/docker-compose.infra.yml
     
