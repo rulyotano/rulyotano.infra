@@ -91,5 +91,3 @@ secrets:
     external: true
   postgres_password:
     external: true
-  pg_admin_password:
-    external: true
