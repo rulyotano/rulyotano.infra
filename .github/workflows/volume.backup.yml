@@ -1,0 +1,67 @@
+name: Volume Backup
+
+on: 
+  workflow_call:
+    inputs:
+      serverName:
+        type: string
+        required: true
+      volumeName:
+        type: string
+        required: true
+      volumePath:
+        type: string
+        required: true
+  workflow_dispatch:
+    inputs:
+      serverName:
+        description: 'Server name'
+        type: string
+        required: true
+      volumeName:
+        description: 'Docker volume name'
+        type: string
+        required: true
+      volumePath:
+        description: 'Volume mount path inside container'
+        type: string
+        required: true
+
+jobs:
+  backup:
+    name: Backup Volume
+    runs-on: ubuntu-latest
+    steps:
+      - name: Create backup
+        id: backup
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ secrets.REMOTE_HOST }}
+          username: ${{ secrets.REMOTE_USER }}
+          key: ${{ secrets.DOCKER_SSH_PRIVATE_KEY }}
+          script: |
+            TIMESTAMP=$(date +%Y%m%d_%H%M%S)
+            BACKUP_FILE="${TIMESTAMP}-${{ inputs.volumeName }}-backup.tar"
+            docker run --rm \
+              -v ${{ inputs.volumeName }}:${{ inputs.volumePath }} \
+              -v $(pwd):/backup \
+              busybox:1.37.0 \
+              tar cf /backup/${BACKUP_FILE} ${{ inputs.volumePath }}
+            echo "backup_file=${BACKUP_FILE}" >> $GITHUB_OUTPUT
+
+      - name: Download backup file
+        uses: appleboy/scp-action@v0.1.4
+        with:
+          host: ${{ secrets.REMOTE_HOST }}
+          username: ${{ secrets.REMOTE_USER }}
+          key: ${{ secrets.DOCKER_SSH_PRIVATE_KEY }}
+          source: "~/${{ steps.backup.outputs.backup_file }}"
+          target: "."
+          strip_components: 1
+
+      - name: Upload backup as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: volume-backup
+          path: ${{ steps.backup.outputs.backup_file }}
+          retention-days: 5
