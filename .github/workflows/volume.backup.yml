@@ -53,8 +53,8 @@ jobs:
               busybox:1.37.0 \
               sh -c "cd ${{ inputs.volumePath }} && tar cf /backup/${BACKUP_FILE} .";
             
-            # Save the backup filename as output
-            echo "backup_file=${BACKUP_FILE}" >> $GITHUB_OUTPUT;
+            # Print the backup filename (will be captured by the action)
+            echo "::set-output name=backup_file::${BACKUP_FILE}";
 
       - name: Download backup file
         uses: appleboy/scp-action@v0.1.4
