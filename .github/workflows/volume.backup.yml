@@ -50,18 +50,30 @@ jobs:
               sh -c "cd ${{ inputs.volumePath }} && tar cf /backup/${BACKUP_FILE} .";
 
       - name: Download backup file
-        uses: appleboy/scp-action@v0.1.7
-        with:
-          host: ${{ inputs.serverName }}
-          username: ${{ secrets.REMOTE_USER }}
-          key: ${{ secrets.DOCKER_SSH_PRIVATE_KEY }}
-          source: "~/${{ env.BACKUP_FILE }}"
-          target: .
-          strip_components: 1
+        run: |
+          # Create SSH key file
+          echo "${{ secrets.DOCKER_SSH_PRIVATE_KEY }}" > ssh_key
+          chmod 600 ssh_key
+          
+          # Download the file using scp
+          scp -i ssh_key -o StrictHostKeyChecking=no ${{ secrets.REMOTE_USER }}@${{ inputs.serverName }}:~/${{ env.BACKUP_FILE }} .
+          
+          # Clean up the key file
+          rm ssh_key
 
       - name: Upload backup as artifact
         uses: actions/upload-artifact@v4
         with:
-          name: volume-backup
+          name: ${{ env.BACKUP_FILE }}
           path: ${{ env.BACKUP_FILE }}
-          retention-days: 5
+          retention-days: 1
+
+      - name: Remove backup from server
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ inputs.serverName }}
+          username: ${{ secrets.REMOTE_USER }}
+          key: ${{ secrets.DOCKER_SSH_PRIVATE_KEY }}
+          envs: BACKUP_FILE
+          script: |
+            rm ${BACKUP_FILE}
