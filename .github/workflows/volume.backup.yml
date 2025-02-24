@@ -50,7 +50,7 @@ jobs:
               sh -c "cd ${{ inputs.volumePath }} && tar cf /backup/${BACKUP_FILE} .";
 
       - name: Download backup file
-        uses: appleboy/scp-action@v0.1.4
+        uses: appleboy/scp-action@v0.1.7
         with:
           host: ${{ inputs.serverName }}
           username: ${{ secrets.REMOTE_USER }}
