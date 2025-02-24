@@ -36,7 +36,7 @@ jobs:
         id: backup
         uses: appleboy/ssh-action@v1.0.0
         with:
-          host: ${{ secrets.REMOTE_HOST }}
+          host: ${{ inputs.serverName }}
           username: ${{ secrets.REMOTE_USER }}
           key: ${{ secrets.DOCKER_SSH_PRIVATE_KEY }}
           script: |
@@ -59,7 +59,7 @@ jobs:
       - name: Download backup file
         uses: appleboy/scp-action@v0.1.4
         with:
-          host: ${{ secrets.REMOTE_HOST }}
+          host: ${{ inputs.serverName }}
           username: ${{ secrets.REMOTE_USER }}
           key: ${{ secrets.DOCKER_SSH_PRIVATE_KEY }}
           source: "~/${{ steps.backup.outputs.backup_file }}"
