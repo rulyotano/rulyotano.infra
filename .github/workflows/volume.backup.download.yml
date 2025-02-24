@@ -37,7 +37,7 @@ jobs:
           username: ${{ secrets.REMOTE_USER }}
           key: ${{ secrets.DOCKER_SSH_PRIVATE_KEY }}
           source: "./${{ inputs.backupFile }}"
-          target: "~/"
+          target: ./
           strip_components: 1
           rm: true
           overwrite: true
