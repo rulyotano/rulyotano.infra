@@ -40,14 +40,14 @@ jobs:
           username: ${{ secrets.REMOTE_USER }}
           key: ${{ secrets.DOCKER_SSH_PRIVATE_KEY }}
           script: |
-            TIMESTAMP=$(date +%Y%m%d_%H%M%S)
-            BACKUP_FILE="${TIMESTAMP}-${{ inputs.volumeName }}-backup.tar"
+            TIMESTAMP=$(date +%Y%m%d_%H%M%S);
+            BACKUP_FILE="${TIMESTAMP}-${{ inputs.volumeName }}-backup.tar";
             docker run --rm \
               -v ${{ inputs.volumeName }}:${{ inputs.volumePath }} \
               -v $(pwd):/backup \
               busybox:1.37.0 \
-              tar cf /backup/${BACKUP_FILE} ${{ inputs.volumePath }}
-            echo "backup_file=${BACKUP_FILE}" >> $GITHUB_OUTPUT
+              tar cf /backup/${BACKUP_FILE} ${{ inputs.volumePath }};
+            echo "backup_file=${BACKUP_FILE}" >> $GITHUB_OUTPUT;
 
       - name: Download backup file
         uses: appleboy/scp-action@v0.1.4
