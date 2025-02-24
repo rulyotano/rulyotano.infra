@@ -17,13 +17,26 @@ jobs:
     name: Download Backup
     runs-on: ubuntu-latest
     steps:
+      - name: Check file and download
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ inputs.serverName }}
+          username: ${{ secrets.REMOTE_USER }}
+          key: ${{ secrets.DOCKER_SSH_PRIVATE_KEY }}
+          script: |
+            # Check if file exists
+            if [ ! -f ~/${{ inputs.backupFile }} ]; then
+              echo "File ~/${{ inputs.backupFile }} not found!"
+              exit 1
+            fi
+
       - name: Download backup file
         uses: appleboy/scp-action@v0.1.4
         with:
           host: ${{ inputs.serverName }}
           username: ${{ secrets.REMOTE_USER }}
           key: ${{ secrets.DOCKER_SSH_PRIVATE_KEY }}
-          source: "${{ inputs.backupFile }}"
+          source: "~/${{ inputs.backupFile }}"
           target: "."
           strip_components: 1
 
