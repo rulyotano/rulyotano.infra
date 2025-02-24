@@ -56,7 +56,7 @@ jobs:
           username: ${{ secrets.REMOTE_USER }}
           key: ${{ secrets.DOCKER_SSH_PRIVATE_KEY }}
           source: "~/${{ env.BACKUP_FILE }}"
-          target: "."
+          target: "~/"
           strip_components: 1
 
       - name: Upload backup as artifact
