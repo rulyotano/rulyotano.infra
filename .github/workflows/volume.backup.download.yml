@@ -31,16 +31,16 @@ jobs:
             fi
 
       - name: Download backup file
-        uses: appleboy/scp-action@v0.1.7
-        with:
-          host: ${{ inputs.serverName }}
-          username: ${{ secrets.REMOTE_USER }}
-          key: ${{ secrets.DOCKER_SSH_PRIVATE_KEY }}
-          source: "${{ inputs.backupFile }}"
-          target: "./"
-          strip_components: 1
-          rm: true
-          overwrite: true
+        run: |
+          # Create SSH key file
+          echo "${{ secrets.DOCKER_SSH_PRIVATE_KEY }}" > ssh_key
+          chmod 600 ssh_key
+          
+          # Download the file using scp
+          scp -i ssh_key -o StrictHostKeyChecking=no ${{ secrets.REMOTE_USER }}@${{ inputs.serverName }}:~/${{ inputs.backupFile }} .
+          
+          # Clean up the key file
+          rm ssh_key
 
       - name: Upload backup as artifact
         uses: actions/upload-artifact@v4
