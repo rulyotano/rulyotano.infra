@@ -31,31 +31,23 @@ jobs:
   backup:
     name: Backup Volume
     runs-on: ubuntu-latest
+    env:
+      BACKUP_FILE: ${{ inputs.volumeName }}-backup-${{ github.run_id }}.tar
     steps:
       - name: Create backup
-        id: backup
         uses: appleboy/ssh-action@v1.0.0
         with:
           host: ${{ inputs.serverName }}
           username: ${{ secrets.REMOTE_USER }}
           key: ${{ secrets.DOCKER_SSH_PRIVATE_KEY }}
-          envs: GITHUB_OUTPUT
+          envs: BACKUP_FILE
           script: |
-            # Generate timestamp for the backup file
-            TIMESTAMP=$(date +%Y%m%d_%H%M%S);
-            
-            # Set the backup filename
-            BACKUP_FILE="${TIMESTAMP}-${{ inputs.volumeName }}-backup.tar";
-            
             # Create the backup using docker
             docker run --rm \
               -v ${{ inputs.volumeName }}:${{ inputs.volumePath }} \
               -v $(pwd):/backup \
               busybox:1.37.0 \
               sh -c "cd ${{ inputs.volumePath }} && tar cf /backup/${BACKUP_FILE} .";
-            
-            # Save the backup filename as output
-            echo "backup_file=${BACKUP_FILE}" >> $GITHUB_OUTPUT;
 
       - name: Download backup file
         uses: appleboy/scp-action@v0.1.4
@@ -63,7 +55,7 @@ jobs:
           host: ${{ inputs.serverName }}
           username: ${{ secrets.REMOTE_USER }}
           key: ${{ secrets.DOCKER_SSH_PRIVATE_KEY }}
-          source: "~/${{ steps.backup.outputs.backup_file }}"
+          source: "~/${{ env.BACKUP_FILE }}"
           target: "."
           strip_components: 1
 
@@ -71,5 +63,5 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: volume-backup
-          path: ${{ steps.backup.outputs.backup_file }}
+          path: ${{ env.BACKUP_FILE }}
           retention-days: 5
