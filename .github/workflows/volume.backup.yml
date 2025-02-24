@@ -40,13 +40,20 @@ jobs:
           username: ${{ secrets.REMOTE_USER }}
           key: ${{ secrets.DOCKER_SSH_PRIVATE_KEY }}
           script: |
+            # Generate timestamp for the backup file
             TIMESTAMP=$(date +%Y%m%d_%H%M%S);
+            
+            # Set the backup filename
             BACKUP_FILE="${TIMESTAMP}-${{ inputs.volumeName }}-backup.tar";
+            
+            # Create the backup using docker
             docker run --rm \
               -v ${{ inputs.volumeName }}:${{ inputs.volumePath }} \
               -v $(pwd):/backup \
               busybox:1.37.0 \
-              tar cf /backup/${BACKUP_FILE} ${{ inputs.volumePath }};
+              sh -c "cd ${{ inputs.volumePath }} && tar cf /backup/${BACKUP_FILE} .";
+            
+            # Save the backup filename as output
             echo "backup_file=${BACKUP_FILE}" >> $GITHUB_OUTPUT;
 
       - name: Download backup file
