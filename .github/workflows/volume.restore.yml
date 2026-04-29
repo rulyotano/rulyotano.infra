@@ -1,0 +1,64 @@
+name: Volume Restore
+
+on:
+  workflow_call:
+    inputs:
+      server:
+        type: string
+        required: true
+      volumeName:
+        type: string
+        required: true
+      dependantServices:
+        type: string
+        required: false
+  workflow_dispatch:
+    inputs:
+      server:
+        description: 'Server name/IP'
+        type: string
+        required: true
+      volumeName:
+        description: 'Docker volume name'
+        type: string
+        required: true
+      dependantServices:
+        description: 'Comma-separated dependent services (can be empty)'
+        type: string
+        required: false
+
+jobs:
+  restore:
+    name: Restore Volume
+    runs-on: ubuntu-latest
+    steps:
+      - name: Restore volume
+        uses: appleboy/ssh-action@v1.0.0
+        env:
+          VOLUME_NAME: ${{ inputs.volumeName }}
+          DEPENDENT_SERVICES: ${{ inputs.dependantServices }}
+        with:
+          host: ${{ inputs.server }}
+          username: ${{ secrets.REMOTE_USER }}
+          key: ${{ secrets.DOCKER_SSH_PRIVATE_KEY }}
+          envs: VOLUME_NAME,DEPENDENT_SERVICES
+          script: |
+            if [ -n "$DEPENDENT_SERVICES" ]; then
+              for service in $(echo "$DEPENDENT_SERVICES" | tr ',' ' '); do
+                docker service scale ${service}=0
+              done
+            fi
+
+            docker run --rm \
+              -v $VOLUME_NAME:/t \
+              -v $(pwd)/volumes/$VOLUME_NAME.tar:/$VOLUME_NAME.tar \
+              busybox:1.37.0 \
+              tar -xvf /$VOLUME_NAME.tar -C /t
+
+            rm ./volumes/$VOLUME_NAME.tar
+
+            if [ -n "$DEPENDENT_SERVICES" ]; then
+              for service in $(echo "$DEPENDENT_SERVICES" | tr ',' ' '); do
+                docker service scale ${service}=1
+              done
+            fi
