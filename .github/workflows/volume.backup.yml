@@ -1,15 +1,12 @@
 name: Volume Backup
 
-on: 
+on:
   workflow_call:
     inputs:
       serverName:
         type: string
         required: true
       volumeName:
-        type: string
-        required: true
-      volumePath:
         type: string
         required: true
   workflow_dispatch:
@@ -20,10 +17,6 @@ on:
         required: true
       volumeName:
         description: 'Docker volume name'
-        type: string
-        required: true
-      volumePath:
-        description: 'Volume mount path inside container'
         type: string
         required: true
 
@@ -42,23 +35,17 @@ jobs:
           key: ${{ secrets.DOCKER_SSH_PRIVATE_KEY }}
           envs: BACKUP_FILE
           script: |
-            # Create the backup using docker
             docker run --rm \
-              -v ${{ inputs.volumeName }}:${{ inputs.volumePath }} \
+              -v ${{ inputs.volumeName }}:/t \
               -v $(pwd):/backup \
               busybox:1.37.0 \
-              sh -c "cd ${{ inputs.volumePath }} && tar cf /backup/${BACKUP_FILE} .";
+              sh -c "cd /t && tar cf /backup/${BACKUP_FILE} .";
 
       - name: Download backup file
         run: |
-          # Create SSH key file
           echo "${{ secrets.DOCKER_SSH_PRIVATE_KEY }}" > ssh_key
           chmod 600 ssh_key
-          
-          # Download the file using scp
           scp -i ssh_key -o StrictHostKeyChecking=no ${{ secrets.REMOTE_USER }}@${{ inputs.serverName }}:~/${{ env.BACKUP_FILE }} .
-          
-          # Clean up the key file
           rm ssh_key
 
       - name: Upload backup as artifact
